@@ -712,7 +712,7 @@ body.dark-mode .item-card.card-kbm {
 
         <form class="login-form" onsubmit="handleLogin(event)" style="width: 100%;">
             <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; text-align: left;">Sign in to continue</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; text-align: left;">Harap Membaca Bismillah Terlebih Dahulu!</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; text-align: left;">Harap Membaca Hamdalah Terlebih Dahulu!</div>
 
             <div class="modern-input-group">
                 <i class="ph-duotone ph-user input-icon-left"></i>
