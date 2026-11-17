@@ -1,76 +1,223 @@
 ================================================================================
-PANDUAN LENGKAP AUTO-DEPLOY GITHUB KE CPANEL (SISTEM MASTER DEPLOYER)
+PANDUAN LENGKAP AUTO-DEPLOY GITHUB KE CPANEL SHARED HOSTING
+(SKENARIO 2: 90% DIKERJAKAN AI AGENT + 10% TINDAKAN PENGGUNA)
 ================================================================================
 Dibuat Khusus Untuk : Bos Surur
-Disusun Oleh        : Partner AI Setia Bos Surur
-Target Lingkungan   : PHP Native / Framework + Laragon (Lokal) + cPanel Shared Hosting (Produksi)
-Metode Utama        : 1 Master Script + 1 Cron Job (Mengurus Semua Website Sekaligus!)
-Versi Ringkas       : 3.0 (Bersih, Rapi, Tanpa Perlu Bikin Script & Cron Berulang-ulang)
+Disusun Oleh        : Pasep (Partner AI Setia Bos Surur)
+Target Lingkungan   : PHP Native + Laragon (Lokal) + cPanel Shared Hosting (Produksi)
+Metode Utama        : Bash Shell Script + cPanel Cron Job (Paling Stabil & Aman)
+Edisi Lengkap       : Memuat Metode Standar (1 Proyek) & Metode Master (Multi-Proyek)
 ================================================================================
 
 DAFTAR ISI:
-1. Mengapa Sistem Master Deployer Jauh Lebih Simpel?
-2. FASE 1: Setup Awal di cPanel (CUKUP 1 KALI SAJA SEUMUR HIDUP!)
-   - Langkah 1: Membuat 1 File 'master_deploy.sh' di Folder 'bin/'
-   - Langkah 2: Memasang 1 Baris Cron Job Sakti di cPanel
-3. KODE MASTER SCRIPT 'master_deploy.sh' (Siap Pakai & Aman)
-4. FASE 2: Cara Menambah Proyek Baru Seterusnya (CUMA 1 MENIT!)
-5. FASE 3: Alur Kerja Harian (100% Otomatis)
-6. Troubleshooting & Cara Memeriksa Log
+1. Mengapa Skenario 2 Adalah Pilihan Paling Realistis & Aman?
+2. Pembagian Tugas (Siapa Mengerjakan Apa)
+3. Variabel Penting yang Harus Disamakan (Anti-Salah Ketik)
+4. FASE 1: Tugas AI Agent di Komputer Lokal (100% Otomatis)
+5. FASE 2: Tindakan Bos Surur di cPanel (Hanya 1 Kali Saja, ~5 Menit)
+   - Langkah 1: Kloning Repository via Git Version Control
+   - Langkah 2: Membuat Folder 'bin' & File Script Deploy
+     * Opsi A: 'autodeploy.sh' (Untuk 1 Proyek Mandiri)
+     * Opsi B: 'master_deploy.sh' (Untuk Mengurus Banyak Proyek Sekaligus - DIREKOMENDASIKAN!)
+   - Langkah 3: Mengatur Hak Akses (Permission 755)
+   - Langkah 4: Memasang Cron Job Otomatis (Cukup 1 Baris!)
+6. FASE 3: Alur Kerja Harian Seterusnya (100% Otonom!)
+7. TROUBLESHOOTING: Cara Memeriksa Log Jika Terjadi Kendala
+8. PANDUAN KHUSUS MULTI-PROYEK (KARENA SUDAH ADA MASTER_DEPLOY.SH)
+   - Penjelasan apa saja yang TIDAK PERLU diulang jika ada proyek baru
+   - Cara menambah proyek ke-2 sampai ke-30 cukup dalam 1 menit
 
 ================================================================================
-1. MENGAPA SISTEM MASTER DEPLOYER JAUH LEBIH SIMPEL?
+1. MENGAPA SKENARIO 2 ADALAH PILIHAN PALING REALISTIS & AMAN?
 ================================================================================
-Pada tutorial lama, setiap kali ada website baru kita harus:
-❌ Membuat folder script baru (bin, bin01, bin02 ... sampai 30).
-❌ Membuat script autodeploy baru berulang-ulang.
-❌ Menambah baris Cron Job baru terus-menerus (bikin server berat & bentrok).
+Di shared hosting (seperti Niagahoster, DomaiNesia, Rumahweb, Hostinger, dll):
+- Provider hosting biasanya MENUTUP akses SSH Terminal demi keamanan server bersama.
+- Provider hosting sering MEMATIKAN fungsi PHP 'shell_exec()' sehingga file 
+  seperti 'deploy.php' sering macet / tidak merespon.
+- Login cPanel membutuhkan keamanan login langsung dari pemilik akun.
 
-Dengan Sistem Master Deployer:
-✅ Folder script CUKUP 1 SAJA : /home/jsnimmnm/bin/
-✅ Script CUKUP 1 FILE SAJA    : /home/jsnimmnm/bin/master_deploy.sh
-✅ Cron Job CUKUP 1 BARIS SAJA : Selamanya cukup 1 baris untuk mengurus 30+ website!
-✅ Setiap 5 menit, script master memeriksa semua website:
-   - Website yang ada commit baru di GitHub -> Otomatis di-deploy.
-   - Website yang tidak ada perubahan       -> Dilewati dalam 0.05 detik (hemat CPU).
+Oleh karena itu, pendekatan terbaik adalah:
+-> AI Agent menyiapkan seluruh arsitektur kode dan skripnya secara matang (90%).
+-> Bos Surur cukup meluangkan waktu 5 menit SEKALI SEUMUR HIDUP untuk menyalin
+   pengaturan awal di dashboard cPanel (10%).
+-> Setelah selesai, selanjutnya 100% berjalan otomatis tanpa buka cPanel lagi!
 
 
 ================================================================================
-2. FASE 1: SETUP AWAL DI CPANEL (CUKUP 1 KALI SAJA SEUMUR HIDUP!)
+2. PEMBAGIAN TUGAS (SIAPA MENGERJAKAN APA)
 ================================================================================
-Langkah ini hanya Anda lakukan SEKALI SAJA saat pertama kali.
+A. TUGAS AI AGENT (PASEP):
+   - Menganalisis proyek lokal di Laragon.
+   - Membuat file proteksi '.gitignore'.
+   - Menghubungkan repo lokal ke GitHub.
+   - Menuliskan skrip deploy yang sudah disesuaikan dengan folder cPanel.
+   - Melakukan 'git commit' dan 'git push' setiap kali ada penambahan fitur/koding.
+
+B. TUGAS BOS SURUR (HANYA 1 KALI DI AWAL):
+   - Login ke cPanel web hosting.
+   - Mendaftarkan repository di menu "Git™ Version Control".
+   - Membuat file script deploy di cPanel File Manager.
+   - Menempelkan 1 baris perintah di menu "Cron Jobs".
+
+
+================================================================================
+3. VARIABEL PENTING (PASTIKAN TIDAK ADA TYPO)
+================================================================================
+Sebelum mulai, catat 4 data utama akun hosting Anda:
+
+1. Username cPanel Anda : jsnimmnm
+   (Huruf kecil semua. Awas jangan tertukar dengan JSIMMNM).
+
+2. Path Folder Repo Git : /home/jsnimmnm/repositories/NAMA_PROYEK
+   (Contoh: /home/jsnimmnm/repositories/supervisimabin atau /home/jsnimmnm/repositories/tokonesia).
+
+3. Path Folder Web/Domain: /home/jsnimmnm/NAMA_DOMAIN_WEB
+   (Contoh: /home/jsnimmnm/supervisi.mabin.corefive.my.id atau /home/jsnimmnm/tokonesia.corefive.my.id).
+
+4. Path Folder Skrip     : /home/jsnimmnm/bin
+   (Gunakan nama 'bin' saja. Tidak perlu membuat 'bin01', 'bin02', dll jika sudah memakai master_deploy.sh).
+
+
+================================================================================
+4. FASE 1: PERSIAPAN DI KOMPUTER LOKAL (DIKERJAKAN AI AGENT)
+================================================================================
+Tugas ini sudah disiapkan otomatis oleh AI di laptop:
+
+1. Membuat file '.gitignore' di root folder proyek:
+   Isi file ini memastikan file lokal seperti password database (config.php / koneksi.php)
+   dan folder upload gambar (uploads/ atau media/) serta file APK TIDAK AKAN tertimpa saat deploy.
+
+   Contoh isi .gitignore:
+   --------------------------------------------------
+   config.php
+   koneksi.php
+   *.apk
+   *.aab
+   mobile_app/build/
+   uploads/
+   media/
+   *.log
+   .env
+   --------------------------------------------------
+
+2. AI melakukan push commit pertama ke GitHub:
+   git init
+   git branch -M main
+   git remote add origin https://github.com/surur99ms/NAMA_REPO.git
+   git add .
+   git commit -m "feat: inisialisasi struktur auto deploy"
+   git push -u origin main
+
+   [PENTING]: Pastikan AI sudah push sampai sukses di GitHub, BARU Bos Surur
+   melakukan kloning di cPanel!
+
+
+================================================================================
+5. FASE 2: TINDAKAN BOS SURUR DI CPANEL (CUKUP 1 KALI SEUMUR HIDUP)
+================================================================================
+Silakan buka browser, login ke cPanel hosting Anda, lalu ikuti langkah ini:
 
 --------------------------------------------------------------------------------
-LANGKAH 1: MEMBUAT FILE 'master_deploy.sh' DI FOLDER 'bin/'
+LANGKAH 1: KLONING REPOSITORY DI CPANEL
 --------------------------------------------------------------------------------
-1. Buka File Manager di cPanel.
-2. Masuk ke folder 'bin/' (/home/jsnimmnm/bin/).
-   *(Jika folder 'bin' belum ada, klik "+ Folder" dan beri nama 'bin')*.
-3. Klik tombol "+ File" di pojok kiri atas -> beri nama: 'master_deploy.sh'.
-4. Klik kanan file 'master_deploy.sh' -> pilih "Edit".
-5. Salin SELURUH KODE di BAGIAN 3 ke dalam file tersebut.
-6. Klik "Save Changes".
-7. Klik kanan file 'master_deploy.sh' -> pilih "Change Permissions" -> centang Execute (755).
+1. Di halaman utama cPanel, cari dan klik menu "Git™ Version Control".
+2. Klik tombol biru "+ Create" di sebelah kanan.
+3. Isi kolom formulir dengan data berikut:
+   - Clone URL        : Tempel URL repository GitHub Anda
+                        (Contoh: https://github.com/surur99ms/supervisimabin.git)
+   - Repository Path  : repositories/supervisimabin
+   - Repository Name  : supervisimabin
+4. Klik tombol "Create".
+   (Tunggu beberapa detik sampai statusnya Success dan repository muncul).
 
 --------------------------------------------------------------------------------
-LANGKAH 2: MEMASANG 1 BARIS CRON JOB DI CPANEL
+LANGKAH 2: MEMBUAT FOLDER 'bin' & FILE SCRIPT
 --------------------------------------------------------------------------------
-1. Buka menu "Cron Jobs" di cPanel.
-2. Hapus baris-baris cron job lama Anda (agar bersih dan tidak bentrok).
-3. Pada Common Settings: Pilih "Once Every 5 Minutes (*/5 * * * *)".
-4. Pada kolom Command, masukkan 1 baris sakti ini:
+1. Kembali ke beranda cPanel, klik menu "File Manager".
+2. Pastikan Anda berada di direktori paling atas (/home/jsnimmnm/).
+3. Klik tombol "+ Folder" di pojok kiri atas:
+   - Beri nama folder: bin
+   - Klik "Create New Folder".
+4. Klik 2x untuk masuk ke dalam folder 'bin' yang baru dibuat (/home/jsnimmnm/bin/).
 
-sed -i 's/\r$//' /home/jsnimmnm/bin/master_deploy.sh; /bin/bash /home/jsnimmnm/bin/master_deploy.sh >> /home/jsnimmnm/logs/master_deploy-run.log 2>&1
+Di sini ada 2 PILIHAN SCRIPT:
+- Pilih OPSI B (MASTER DEPLOYER) jika Anda punya banyak proyek agar hidup lebih mudah.
+- Opsi A adalah script tunggal versi lama.
 
-5. Klik tombol "Add New Cron Job". SELESAI SETUP AWAL!
+................................................................................
+[OPSI A]: SKRIP TUNGGAL 'autodeploy.sh' (Untuk 1 Proyek Saja)
+................................................................................
+Buat file baru 'autodeploy.sh', klik Edit, dan salin kode ini:
+
+#!/bin/bash
+export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
+
+# --- KONFIGURASI PATH SERVER ---
+REPO=/home/jsnimmnm/repositories/tokonesia
+DOC=/home/jsnimmnm/tokonesia.corefive.my.id
+LOGDIR=/home/jsnimmnm/logs
+LOG="$LOGDIR/autodeploy.log"
+
+mkdir -p "$LOGDIR"
+log(){ echo "$(date '+%F %T') $*" >> "$LOG"; }
+
+# 1. Kunci proses (mencegah bentrok jika cron jalan bersamaan)
+LOCK="$LOGDIR/.autodeploy.lock"
+find "$LOCK" -maxdepth 0 -mmin +3 -exec rm -rf {} + 2>/dev/null
+mkdir "$LOCK" 2>/dev/null || { log "SKIP: proses sebelumnya masih berjalan"; exit 0; }
+trap 'rm -rf "$LOCK"' EXIT INT TERM
+
+# 2. Validasi direktori
+command -v git >/dev/null 2>&1 || { log "ERROR: git tidak ditemukan di server"; exit 1; }
+[ -d "$REPO/.git" ] || { log "ERROR: repo tidak ditemukan di $REPO"; exit 1; }
+[ -d "$DOC" ]       || { log "ERROR: docroot tidak ditemukan di $DOC"; exit 1; }
+
+cd "$REPO" || { log "ERROR: gagal masuk ke direktori $REPO"; exit 1; }
+
+# 3. Ambil commit terbaru dari GitHub
+if ! OUT=$(git fetch origin 2>&1); then
+  log "ERROR: git fetch gagal -> $OUT"; exit 1
+fi
+
+LOCAL=$(git rev-parse HEAD 2>/dev/null)
+REMOTE=$(git rev-parse origin/main 2>/dev/null)
+[ -z "$REMOTE" ] && { log "ERROR: gagal membaca branch origin/main"; exit 1; }
+
+# Jika tidak ada update commit baru, berhenti diam-diam (hemat CPU hosting)
+[ "$LOCAL" = "$REMOTE" ] && exit 0
+
+log "MULAI deploy pembaruan: ${LOCAL:0:7} -> ${REMOTE:0:7}"
+
+# 4. Sinkronkan git server ke commit terbaru
+if ! OUT=$(git reset --hard "$REMOTE" 2>&1); then
+  log "ERROR: git reset gagal -> $OUT"; exit 1
+fi
+
+# 5. Salin perubahan file ke folder domain publik (proteksi database & aset aman)
+if ! OUT=$( { tar -cf - --exclude='.git' --exclude='.github' --exclude='.cpanel.yml' \
+              --exclude='.gitignore' --exclude='.gitattributes' \
+              --exclude='autodeploy.sh' \
+              --exclude='config.php' \
+              --exclude='koneksi.php' \
+              --exclude='mobile_app' \
+              --exclude='uploads' \
+              --exclude='*.sql' . \
+  | ( cd "$DOC" && tar -xf - --no-overwrite-dir --no-same-permissions ); } 2>&1 ); then
+  log "ERROR: penyalinan file gagal -> $OUT"; exit 1
+fi
+
+# 6. Kunci izin direktori aman
+chmod 750 "$DOC" 2>/dev/null
+rm -rf "$LOCK"
+log "SUKSES: deploy commit ${REMOTE:0:7} selesai sempurna!"
 
 
-================================================================================
-3. KODE MASTER SCRIPT 'master_deploy.sh' (STANDAR EMAS)
-================================================================================
-Salin seluruh kode di bawah ini ke file '/home/jsnimmnm/bin/master_deploy.sh':
+................................................................................
+[OPSI B]: MASTER SCRIPT 'master_deploy.sh' (BISA UNTUK 30+ PROYEK SEKALIGUS!)
+>>> INI YANG SANGAT DIREKOMENDASIKAN KARENA SUDAH ADA MASTER DEPLOYER! <<<
+................................................................................
+Buat file baru 'master_deploy.sh', klik Edit, dan salin kode ini:
 
-------------------- [MULAI SALIN KODE DI BAWAH INI] -------------------
 #!/bin/bash
 export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
 
@@ -81,11 +228,10 @@ export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
 PROYEK_LIST=(
     "supervisimabin:supervisi.mabin.corefive.my.id"
     "tokonesia:tokonesia.corefive.my.id"
-    # Jika ada proyek ke-3, ke-4, dst, cukup tambahkan di bawah ini:
+    # Jika besok ada proyek ke-3, ke-4, dst, cukup tambahkan 1 baris di bawah ini:
     # "nama_repo_baru:folder_domain_baru.com"
 )
 
-# Direktori Dasar cPanel
 HOME_DIR="/home/jsnimmnm"
 LOGDIR="$HOME_DIR/logs"
 LOG="$LOGDIR/master_deploy.log"
@@ -99,14 +245,10 @@ find "$MASTER_LOCK" -maxdepth 0 -mmin +5 -exec rm -rf {} + 2>/dev/null
 mkdir "$MASTER_LOCK" 2>/dev/null || exit 0
 trap 'rm -rf "$MASTER_LOCK"' EXIT INT TERM
 
-# Validasi perintah git
 command -v git >/dev/null 2>&1 || { echo "$(date '+%F %T') [SYSTEM] ERROR: git tidak ditemukan di server" >> "$LOG"; exit 1; }
 
-# ==============================================================================
-# PROSES OTOMATIS: PERIKSA SETIAP WEBSITE SATU PER SATU
-# ==============================================================================
+# Loop seluruh website satu per satu
 for ITEM in "${PROYEK_LIST[@]}"; do
-    # Lewati baris komentar (#) atau baris kosong
     [[ "$ITEM" =~ ^#.* ]] && continue
     [ -z "$ITEM" ] && continue
 
@@ -116,31 +258,26 @@ for ITEM in "${PROYEK_LIST[@]}"; do
     REPO="$HOME_DIR/repositories/$REPO_NAME"
     DOC="$HOME_DIR/$DOC_NAME"
 
-    # Pastikan repo git dan folder domain benar-benar ada di server
     [ -d "$REPO/.git" ] || continue
     [ -d "$DOC" ] || continue
 
     cd "$REPO" || continue
-
-    # Tarik status commit terbaru dari GitHub
     git fetch -q origin 2>/dev/null || continue
 
     LOCAL=$(git rev-parse HEAD 2>/dev/null)
     REMOTE=$(git rev-parse origin/main 2>/dev/null)
 
-    # Jika tidak ada commit baru, lewati (hemat CPU hosting)
     [ -z "$REMOTE" ] && continue
     [ "$LOCAL" = "$REMOTE" ] && continue
 
     log "$REPO_NAME" "MULAI deploy: ${LOCAL:0:7} -> ${REMOTE:0:7}"
 
-    # Sinkronkan repo server ke commit terbaru
     if ! OUT=$(git reset -q --hard "$REMOTE" 2>&1); then
         log "$REPO_NAME" "ERROR: git reset gagal -> $OUT"
         continue
     fi
 
-    # Salin file ke folder domain (Proteksi database, app mobile, sql & uploads aman)
+    # Salin file ke folder domain web publik (Proteksi database & aset aman)
     if ! OUT=$( { tar -cf - \
                   --exclude='.git' \
                   --exclude='.github' \
@@ -161,7 +298,6 @@ for ITEM in "${PROYEK_LIST[@]}"; do
         continue
     fi
 
-    # Eksekusi migrasi database otomatis jika ada file migrate.php
     if [ -f "$DOC/migrate.php" ]; then
         php "$DOC/migrate.php" >> "$LOG" 2>&1
     fi
@@ -171,76 +307,101 @@ for ITEM in "${PROYEK_LIST[@]}"; do
 done
 
 rm -rf "$MASTER_LOCK"
-------------------- [BATAS AKHIR SALIN KODE] -------------------
+
+--------------------------------------------------------------------------------
+LANGKAH 3: MENGATUR IZIN FILE (PERMISSION 755)
+--------------------------------------------------------------------------------
+1. Masih di File Manager cPanel pada file script yang baru dibuat ('master_deploy.sh' atau 'autodeploy.sh').
+2. Klik kanan file tersebut -> pilih "Change Permissions".
+3. Centang bagian Execute (User/Group) sehingga Permission bernilai: 755.
+4. Klik "Change Permissions".
+
+--------------------------------------------------------------------------------
+LANGKAH 4: MEMASANG CRON JOB (CUKUP 1 BARIS!)
+--------------------------------------------------------------------------------
+1. Kembali ke beranda cPanel, cari dan klik menu "Cron Jobs".
+2. Pada bagian "Add New Cron Job":
+   - Common Settings : Pilih "Once Every 5 Minutes (*/5 * * * *)".
+   - Command         : 
+
+Jika memakai OPSI B (MASTER DEPLOYER - Rekomendasi):
+sed -i 's/\r$//' /home/jsnimmnm/bin/master_deploy.sh; /bin/bash /home/jsnimmnm/bin/master_deploy.sh >> /home/jsnimmnm/logs/master_deploy-run.log 2>&1
+
+(Jika memakai Opsi A lama untuk 1 proyek):
+sed -i 's/\r$//' /home/jsnimmnm/bin/autodeploy.sh; /bin/bash /home/jsnimmnm/bin/autodeploy.sh >> /home/jsnimmnm/bin/autodeploy-run.log 2>&1
+
+3. Klik tombol "Add New Cron Job".
+
+>>> CATATAN SANGAT PENTING:
+- JANGAN memasang cron job 'curl deploy.php' lagi!
+- Perhatikan kata '/bin/bash' -> Selalu tetap '/bin/bash', JANGAN pernah diubah menjadi '/bin02/bash'.
 
 
 ================================================================================
-4. FASE 2: CARA MENAMBAH PROYEK BARU SETERUSNYA (CUMA 1 MENIT!)
+6. FASE 3: ALUR KERJA HARIAN SETERUSNYA (100% OTONOM!)
 ================================================================================
-Setelah Fase 1 selesai, jika besok Bos Surur membuat website baru (misal: 'koperasi'):
+Setelah Fase 2 selesai disetel satu kali, Bos Surur TIDAK PERLU LAGI membuka cPanel
+setiap kali ada update aplikasi!
 
-❌ TIDAK PERLU membuat folder bin baru.
-❌ TIDAK PERLU membuat file script deploy baru.
-❌ TIDAK PERLU menambah baris Cron Job baru di cPanel.
-
-CUKUP LAKUKAN 2 LANGKAH RINGKAS INI:
-
-Langkah 1: Kloning di cPanel Git Version Control
-1. Di cPanel, buka menu "Git™ Version Control" -> klik "+ Create".
-2. Isi formulir:
-   - Clone URL       : Masukkan link GitHub proyek baru Anda
-   - Repository Path : repositories/koperasi
-3. Klik "Create". (Pastikan statusnya Success).
-
-Langkah 2: Daftarkan ke 'master_deploy.sh'
-1. Buka File Manager cPanel -> buka file '/home/jsnimmnm/bin/master_deploy.sh' -> Edit.
-2. Tambahkan 1 baris nama proyek baru di dalam daftar 'PROYEK_LIST':
-   ```bash
-   PROYEK_LIST=(
-       "supervisimabin:supervisi.mabin.corefive.my.id"
-       "tokonesia:tokonesia.corefive.my.id"
-       "koperasi:koperasi.corefive.my.id"      <-- CUKUP TAMBAH BARIS INI!
-   )
-   ```
-3. Klik "Save Changes".
-
-SELESAI! Website baru tersebut langsung otomatis ter-deploy setiap 5 menit bersama
-website-website lainnya tanpa perlu mengatur apa pun lagi!
+Alur kerjanya menjadi super simpel:
+1. Bos Surur bekerja bersama AI di Antigravity IDE:
+   "Tolong buatkan halaman baru dan ubah warna tombol jadi biru."
+2. AI mengedit file dan mengetesnya di Laragon lokal.
+3. AI melakukan git push ke GitHub.
+4. Dalam hitungan 1-5 menit:
+   Server cPanel otomatis mendeteksi ada commit baru -> mengeksekusi script
+   -> file di website publik otomatis diperbarui!
+5. Bos Surur cukup refresh browser di HP atau laptop, website sudah terupdate live!
 
 
 ================================================================================
-5. FASE 3: ALUR KERJA HARIAN SETERUSNYA (100% OTOMATIS)
+7. TROUBLESHOOTING: CARA CEK JIKA KODE BELUM MUNCUL DI WEBSITE
 ================================================================================
-Alur kerja harian Bos Surur bersama AI Agent:
-1. Bos Surur meminta perubahan pada AI di laptop:
-   "Tolong ubah warna header dan update fitur laporan."
-2. AI Agent mengedit kode, mengetes di Laragon, lalu menjalankan:
-   git add .
-   git commit -m "Update fitur laporan"
-   git push origin main
-3. Dalam hitungan 1-5 menit:
-   Server cPanel otomatis mendeteksi ada commit baru -> menarik kode baru
-   -> website di hosting otomatis ter-update secara live!
-4. Bos Surur cukup refresh browser di HP atau laptop untuk melihat hasilnya.
+Jika setelah push ke GitHub website belum berubah, buka File Manager cPanel dan
+cek file log berikut:
 
+1. File: /home/jsnimmnm/logs/master_deploy-run.log (atau autodeploy-run.log)
+   Fungsi: Memastikan Cron Job cPanel benar-benar memanggil skrip bash.
+   Jika file ini ada dan tidak ada pesan error merah, berarti cron job aktif.
 
-================================================================================
-6. TROUBLESHOOTING & CARA MEMERIKSA LOG
-================================================================================
-Jika ada website yang belum berubah setelah 5 menit:
+2. File: /home/jsnimmnm/logs/master_deploy.log (atau autodeploy.log)
+   Fungsi: Melihat riwayat deploy. Anda akan melihat baris seperti ini:
+   "2026-11-18 01:00:02 [supervisimabin] MULAI deploy: 9e083d1 -> da93a08"
+   "2026-11-18 01:00:03 [supervisimabin] SUKSES: deploy commit da93a08 selesai sempurna!"
 
-1. Periksa Log Riwayat Deployment:
-   Buka file ini di File Manager cPanel:
-   👉 /home/jsnimmnm/logs/master_deploy.log
+3. Masalah Browser Cache di HP/Laptop:
+   Seringkali website di server SEBENARNYA SUDAH BERUBAH, tapi browser menampilkan cache lama.
+   Tekan 'Ctrl + F5' di laptop, atau buka lewat mode 'Incognito / Tab Samaran' di HP.
 
-   Catatan deploy akan tampil sangat rapi per website:
-   2026-11-18 01:00:02 [supervisimabin] MULAI deploy: 9e083d1 -> da93a08
-   2026-11-18 01:00:03 [supervisimabin] SUKSES: deploy commit da93a08 selesai sempurna!
-
-2. Masalah Browser Cache di HP/Laptop:
-   Seringkali file di server SEBENARNYA SUDAH BERUBAH, tapi browser menampilkan cache lama.
-   Tekan tombol 'Ctrl + F5' di laptop, atau buka website lewat mode 'Incognito / Tab Samaran' di HP.
 
 ================================================================================
-SELESAI! PANDUAN INI MENJADI STANDAR MASTER UNTUK SEMUA WEBSITE BOS SURUR.
+8. PANDUAN KHUSUS MULTI-PROYEK (KARENA SUDAH ADA MASTER_DEPLOY.SH)
+================================================================================
+Ini adalah bagian terpenting yang menjawab: "Apa saja yang tidak diperlukan lagi
+karena sudah ada master_deploy.sh?"
+
+A. YANG TIDAK PERLU DILAKUKAN LAGI:
+   ❌ TIDAK PERLU membuat folder bin baru (bin01, bin02, bin03, dst) -> TIDAK USAH!
+   ❌ TIDAK PERLU membuat file script autodeploy baru berulang-ulang -> TIDAK USAH!
+   ❌ TIDAK PERLU menambah baris Cron Job baru di cPanel -> TIDAK USAH!
+
+B. JADI JIKA ADA PROYEK KE-3, KE-4, SAMPAI KE-30, CARANYA HANYA 2 LANGKAH (1 MENIT):
+   Langkah 1: Kloning repo proyek baru di cPanel menu "Git™ Version Control".
+              (Contoh: repo 'koperasi' di folder 'repositories/koperasi').
+
+   Langkah 2: Buka file '/home/jsnimmnm/bin/master_deploy.sh' lewat File Manager cPanel,
+              lalu tambahkan 1 baris nama proyek baru di bagian 'PROYEK_LIST':
+
+              PROYEK_LIST=(
+                  "supervisimabin:supervisi.mabin.corefive.my.id"
+                  "tokonesia:tokonesia.corefive.my.id"
+                  "koperasi:koperasi.corefive.my.id"   <-- CUKUP TAMBAH INI SAJA!
+              )
+
+   Simpan file. SELESAI!
+   Cron Job tunggal yang sudah aktif akan otomatis mengurus website baru tersebut
+   selamanya tanpa perlu utak-atik menu Cron Jobs lagi!
+
+================================================================================
+SELESAI! DOKUMEN MASTER LENGKAP INI SIAP DIGUNAKAN SETERUSNYA OLEH BOS SURUR.
 ================================================================================
