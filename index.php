@@ -698,8 +698,8 @@ body.dark-mode .item-card.card-kbm {
              Madrasah Binaan IASS
         </div>
 
-        <h2 class="login-header-title">Selamat Datang</h2>
-        <div class="login-header-subtitle">Selamat Berkhidmah di Supervisi Mabin!</div>
+        <h2 class="login-header-title">Ahlan wa Sahlan</h2>
+        <div class="login-header-subtitle">Selamat Berkhidmah!</div>
         <!-- Auto-Deploy Active v1.0.1 -->
 
         <!-- Tab Navigasi Simulasi -->
