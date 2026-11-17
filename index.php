@@ -699,7 +699,8 @@ body.dark-mode .item-card.card-kbm {
         </div>
 
         <h2 class="login-header-title">Selamat Datang</h2>
-        <div class="login-header-subtitle">Selamat Berkhidmah!</div>
+        <div class="login-header-subtitle">Selamat Berkhidmah di Supervisi Mabin!</div>
+        <!-- Auto-Deploy Active v1.0.1 -->
 
         <!-- Tab Navigasi Simulasi -->
         <div class="auth-tab-container">
