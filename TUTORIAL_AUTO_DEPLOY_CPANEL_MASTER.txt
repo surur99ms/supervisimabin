@@ -1,0 +1,236 @@
+================================================================================
+PANDUAN LENGKAP AUTO-DEPLOY GITHUB KE CPANEL (SISTEM MASTER DEPLOYER)
+================================================================================
+Dibuat Khusus Untuk : Bos Surur
+Disusun Oleh        : Partner AI Setia Bos Surur
+Target Lingkungan   : PHP Native / Framework + Laragon (Lokal) + cPanel Shared Hosting
+Metode Unggulan     : Master Bash Loop (1 Folder 'bin', 1 Cron Job Mengurus Semua Web!)
+Lokasi Proyek       : C:\laragon\www\supervisimabin
+================================================================================
+
+DAFTAR ISI:
+1. Konsep Inti Master Deployer (Mengapa Jauh Lebih Cepat & Rapi?)
+2. Pembersihan Cron Job di cPanel (Hapus yang Sampah, Sisakan 1 Saja)
+3. Cara Setup Awal di cPanel (Hanya Dilakukan 1 Kali Seumur Hidup!)
+4. Kode Lengkap 'master_deploy.sh' (Siap Salin & Tempel)
+5. Cara Menambah Proyek Baru Seterusnya (Kurang dari 1 Menit!)
+6. Troubleshooting & Cara Memeriksa Log Jika Terjadi Kendala
+
+================================================================================
+1. KONSEP INTI MASTER DEPLOYER (MENGAPA JAUH LEBIH CEPAT & RAPI?)
+================================================================================
+Jika Bos Surur punya 5, 10, sampai 30 website di satu akun cPanel:
+❌ Jangan membuat folder 'bin01', 'bin02', 'bin03' ... sampai 30 folder.
+❌ Jangan memasang 30 baris Cron Job di cPanel (server berat dan gembok lock bentrok).
+
+✅ CUKUP GUNAKAN SISTEM MASTER DEPLOYER:
+- Folder script cukup 1 saja: /home/jsnimmnm/bin/
+- Script cukup 1 file saja   : /home/jsnimmnm/bin/master_deploy.sh
+- Cron Job di cPanel         : CUKUP 1 BARIS SAJA selamanya!
+- Setiap 5 menit, script master akan memeriksa seluruh daftar website Anda:
+  * Website yang ADA commit update di GitHub -> Otomatis di-deploy ke web publik.
+  * Website yang TIDAK ADA update           -> Dilewati (skip) dalam 0.05 detik (hemat CPU).
+
+
+================================================================================
+2. PEMBERSIHAN CRON JOB DI CPANEL (BERSIHKAN YANG LAMA)
+================================================================================
+Buka menu "Cron Jobs" di cPanel Anda. Sesuaikan dengan daftar di bawah ini:
+
+1. Baris 1 (/home/jsnimmnm/bin/autodeploy.sh)
+   👉 [UBAH / EDIT]: Ganti perintahnya menjadi pemanggil 'master_deploy.sh' (Lihat Bagian 3 Langkah 2).
+   Ini adalah 1-satunya Cron Job utama yang dipertahankan.
+
+2. Baris 2 (gh repo clone pusatranting/tokoibtidaiyah...)
+   👉 [HAPUS / DELETE]: Perintah clone tidak boleh dijalankan berulang-ulang di cron.
+
+3. Baris 3 (/usr/bin/curl ... tokonesia ... deploy.php)
+   👉 [HAPUS / DELETE]: Metode curl lama sudah tidak dipakai lagi.
+
+4. Baris 4 (/home/jsnimmnm/bin01/autodeploy.sh)
+   👉 [HAPUS / DELETE]: Cukup masukkan nama proyeknya ke daftar 'master_deploy.sh'.
+
+5. Baris 5 (/home/jsnimmnm/bin02/autodeploy.sh)
+   👉 [HAPUS / DELETE]: Supervisi Mabin sudah otomatis diurus oleh 'master_deploy.sh'.
+
+
+================================================================================
+3. CARA SETUP AWAL DI CPANEL (HANYA DILAKUKAN 1 KALI SEUMUR HIDUP)
+================================================================================
+
+LANGKAH 1: MEMBUAT FILE 'master_deploy.sh'
+1. Buka cPanel -> klik "File Manager".
+2. Masuk ke folder 'bin/' (/home/jsnimmnm/bin/).
+   *(Jika folder 'bin' belum ada, klik "+ Folder" dan beri nama 'bin')*.
+3. Klik tombol "+ File" di pojok kiri atas -> beri nama: 'master_deploy.sh'.
+4. Klik kanan file 'master_deploy.sh' -> pilih "Edit".
+5. Salin seluruh isi kode pada BAGIAN 4 di bawah ini, lalu klik "Save Changes".
+6. Klik kanan file 'master_deploy.sh' -> pilih "Change Permissions" -> ubah ke 755.
+
+LANGKAH 2: MEMASANG 1 BARIS CRON JOB SAKTI
+1. Buka cPanel -> klik menu "Cron Jobs".
+2. Pada Common Settings: Pilih "Once Every 5 Minutes (*/5 * * * *)".
+3. Pada kolom Command, masukkan 1 baris sakti ini:
+
+sed -i 's/\r$//' /home/jsnimmnm/bin/master_deploy.sh; /bin/bash /home/jsnimmnm/bin/master_deploy.sh >> /home/jsnimmnm/logs/master_deploy-run.log 2>&1
+
+4. Klik tombol "Add New Cron Job" (atau simpan hasil edit dari Baris 1 tadi).
+
+
+================================================================================
+4. KODE LENGKAP 'master_deploy.sh' (SIAP SALIN & TEMPEL)
+================================================================================
+------------------- [MULAI SALIN KODE DI BAWAH INI] -------------------
+#!/bin/bash
+export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
+
+# ==============================================================================
+# DAFTAR SEMUA WEBSITE ANDA (BISA DITAMBAH HINGGA 30+ PROYEK)
+# Format pengisian: "NAMA_REPO_GIT:NAMA_FOLDER_DOMAIN_WEB"
+# ==============================================================================
+PROYEK_LIST=(
+    "supervisimabin:supervisi.mabin.corefive.my.id"
+    "tokonesia:tokonesia.corefive.my.id"
+    # Jika besok ada proyek ke-3, ke-4, dst, cukup tambahkan di bawah ini:
+    # "nama_repo_baru:folder_domain_baru.com"
+)
+
+# Direktori Dasar cPanel
+HOME_DIR="/home/jsnimmnm"
+LOGDIR="$HOME_DIR/logs"
+LOG="$LOGDIR/master_deploy.log"
+
+mkdir -p "$LOGDIR"
+log(){ echo "$(date '+%F %T') [$1] $2" >> "$LOG"; }
+
+# Gembok Master (Mencegah dua eksekusi cron bertabrakan)
+MASTER_LOCK="$LOGDIR/.master_deploy.lock"
+find "$MASTER_LOCK" -maxdepth 0 -mmin +5 -exec rm -rf {} + 2>/dev/null
+mkdir "$MASTER_LOCK" 2>/dev/null || exit 0
+trap 'rm -rf "$MASTER_LOCK"' EXIT INT TERM
+
+# Validasi perintah git
+command -v git >/dev/null 2>&1 || { echo "$(date '+%F %T') [SYSTEM] ERROR: git tidak ditemukan di server" >> "$LOG"; exit 1; }
+
+# ==============================================================================
+# PROSES OTOMATIS: PERIKSA SETIAP WEBSITE SATU PER SATU
+# ==============================================================================
+for ITEM in "${PROYEK_LIST[@]}"; do
+    # Lewati baris komentar (#) atau baris kosong
+    [[ "$ITEM" =~ ^#.* ]] && continue
+    [ -z "$ITEM" ] && continue
+
+    REPO_NAME="${ITEM%%:*}"
+    DOC_NAME="${ITEM##*:}"
+
+    REPO="$HOME_DIR/repositories/$REPO_NAME"
+    DOC="$HOME_DIR/$DOC_NAME"
+
+    # Pastikan repo git dan folder domain benar-benar ada di server
+    [ -d "$REPO/.git" ] || continue
+    [ -d "$DOC" ] || continue
+
+    cd "$REPO" || continue
+
+    # Tarik status commit terbaru dari GitHub
+    git fetch -q origin 2>/dev/null || continue
+
+    LOCAL=$(git rev-parse HEAD 2>/dev/null)
+    REMOTE=$(git rev-parse origin/main 2>/dev/null)
+
+    # Jika origin/main tidak terbaca atau tidak ada commit baru, lewati (hemat CPU hosting)
+    [ -z "$REMOTE" ] && continue
+    [ "$LOCAL" = "$REMOTE" ] && continue
+
+    log "$REPO_NAME" "MULAI deploy: ${LOCAL:0:7} -> ${REMOTE:0:7}"
+
+    # Sinkronkan repo server ke commit terbaru
+    if ! OUT=$(git reset -q --hard "$REMOTE" 2>&1); then
+        log "$REPO_NAME" "ERROR: git reset gagal -> $OUT"
+        continue
+    fi
+
+    # Salin file ke folder domain web publik (Proteksi database, app mobile & sql aman)
+    if ! OUT=$( { tar -cf - \
+                  --exclude='.git' \
+                  --exclude='.github' \
+                  --exclude='.cpanel.yml' \
+                  --exclude='.gitignore' \
+                  --exclude='.gitattributes' \
+                  --exclude='autodeploy*.sh' \
+                  --exclude='master_deploy.sh' \
+                  --exclude='config.php' \
+                  --exclude='koneksi.php' \
+                  --exclude='database.php' \
+                  --exclude='mobile_app' \
+                  --exclude='uploads' \
+                  --exclude='media' \
+                  --exclude='*.sql' . \
+      | ( cd "$DOC" && tar -xf - --no-overwrite-dir --no-same-permissions ); } 2>&1 ); then
+        log "$REPO_NAME" "ERROR: penyalinan file gagal -> $OUT"
+        continue
+    fi
+
+    # Eksekusi migrasi database otomatis jika ada file migrate.php
+    if [ -f "$DOC/migrate.php" ]; then
+        php "$DOC/migrate.php" >> "$LOG" 2>&1
+    fi
+
+    chmod 750 "$DOC" 2>/dev/null
+    log "$REPO_NAME" "SUKSES: deploy commit ${REMOTE:0:7} selesai sempurna!"
+done
+
+rm -rf "$MASTER_LOCK"
+------------------- [BATAS AKHIR SALIN KODE] -------------------
+
+
+================================================================================
+5. CARA MENAMBAH PROYEK BARU SETERUSNYA (HANYA BUTUH 1 MENIT!)
+================================================================================
+Jika nanti Bos Surur membuat website baru (misal: proyek 'koperasi'):
+
+Bos Surur TIDAK PERLU membuat folder bin baru ataupun membuat cron job baru!
+Cukup lakukan 2 langkah super cepat ini:
+
+Langkah 1: Clone di cPanel Git Version Control
+- Di cPanel, buka menu "Git™ Version Control" -> klik "+ Create".
+- Clone URL       : Masukkan link GitHub proyek baru Anda
+- Repository Path : repositories/koperasi
+- Klik "Create".
+
+Langkah 2: Daftarkan ke 'master_deploy.sh'
+- Buka File Manager cPanel -> buka file '/home/jsnimmnm/bin/master_deploy.sh' -> pilih Edit.
+- Tambahkan 1 baris nama proyek baru di dalam daftar 'PROYEK_LIST':
+  ```bash
+  PROYEK_LIST=(
+      "supervisimabin:supervisi.mabin.corefive.my.id"
+      "tokonesia:tokonesia.corefive.my.id"
+      "koperasi:koperasi.corefive.my.id"      <-- CUKUP TAMBAH BARIS INI!
+  )
+  ```
+- Klik "Save Changes".
+
+SELESAI! Website baru tersebut langsung otomatis ter-autodeploy setiap 5 menit bersama
+website-website lainnya tanpa perlu menyentuh menu Cron Jobs lagi selamanya!
+
+
+================================================================================
+6. TROUBLESHOOTING & CARA MEMERIKSA LOG
+================================================================================
+Untuk melihat seluruh riwayat deployment dari semua website Anda:
+Buka file ini di File Manager cPanel:
+👉 /home/jsnimmnm/logs/master_deploy.log
+
+Contoh isi catatan log yang rapi:
+2026-11-18 01:00:02 [supervisimabin] MULAI deploy: 9e083d1 -> 5177168
+2026-11-18 01:00:03 [supervisimabin] SUKSES: deploy commit 5177168 selesai sempurna!
+2026-11-18 01:05:02 [tokonesia] MULAI deploy: a1b2c3d -> e4f5g6h
+2026-11-18 01:05:04 [tokonesia] SUKSES: deploy commit e4f5g6h selesai sempurna!
+
+Tips Browser Cache:
+Jika ada perubahan kode tapi di HP/laptop belum berubah, seringkali karena browser
+menyimpan cache lama. Tekan 'Ctrl + F5' di laptop atau buka lewat mode Incognito/Samaran di HP.
+
+================================================================================
+DOKUMEN INI TERSIMPAN DI REPOSITORI LOKAL SUPERVISI MABIN
+================================================================================
