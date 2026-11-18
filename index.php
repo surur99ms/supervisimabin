@@ -699,7 +699,7 @@ body.dark-mode .item-card.card-kbm {
         </div>
 
         <h2 class="login-header-title">Ahlan wa Sahlan</h2>
-        <div class="login-header-subtitle">Selamat Berkhidmah!</div>
+        <div class="login-header-subtitle">Selamat Berkhidmah Kawan!</div>
         <!-- Auto-Deploy Active v1.0.1 -->
 
         <!-- Tab Navigasi Simulasi -->
